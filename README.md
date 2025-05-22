@@ -1,6 +1,17 @@
-<img src="./docs/assets/logo.png" alt="Qsync logo" width="500px" />
+<a href="#">
+	<picture>
+		<img src="./docs/assets/logo.png" alt="Qsync logo" />
+	</picture>
+</a>
 
 # Простая и эффективная распределенная очередь задач в Go
+
+![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/alnovi/qsync)
+![GitHub License](https://img.shields.io/github/license/alnovi/qsync)
+[![Go Report Card](https://goreportcard.com/badge/github.com/alnovi/qsync)](https://goreportcard.com/report/github.com/alnovi/qsync)
+![GitHub top language](https://img.shields.io/github/languages/top/alnovi/qsync)
+![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/alnovi/qsync)
+![GitHub Release](https://img.shields.io/github/v/release/alnovi/qsync)
 
 **Qsync** — это библиотека Go для постановки задач в очередь и их асинхронной обработки с помощью обработчиков.
 
