@@ -1,9 +1,3 @@
-<a href="#">
-	<picture>
-		<img src="./docs/assets/logo.png" alt="Qsync logo" />
-	</picture>
-</a>
-
 # Простая и эффективная распределенная очередь задач в Go
 
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/alnovi/qsync)
