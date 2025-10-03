@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/redis/go-redis/v9"
+
+	"github.com/alnovi/qsync/utils"
 )
 
 type broker struct {
@@ -19,6 +21,11 @@ func newBroker(prefix string, client redis.UniversalClient) *broker {
 	prefix = strings.ToLower(prefix)
 	prefix = prefix + ":qsync"
 	prefix = strings.Trim(prefix, ":")
+
+	if utils.IsCluster(client) {
+		prefix += "{cluster}"
+	}
+
 	return &broker{
 		prefix: prefix,
 		client: client,
