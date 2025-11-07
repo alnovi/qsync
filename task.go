@@ -12,8 +12,11 @@ import (
 )
 
 const (
-	taskIdCost   = 6
-	taskMaxRetry = 5
+	taskIdCost     = 6
+	taskDelay      = 0
+	taskRetry      = 3
+	taskRetryDelay = 0
+	taskMaxRetry   = 5
 )
 
 var (
@@ -23,8 +26,6 @@ var (
 	ErrTaskFailEncode  = errors.New("fail encode task")
 	ErrTaskIsDeadline  = errors.New("task is deadline")
 )
-
-type TaskOption func(*Task)
 
 type Task struct {
 	id         string
@@ -42,9 +43,9 @@ func NewTask(typename string, payload []byte, opts ...TaskOption) *Task {
 		id:         "",
 		typename:   strings.TrimSpace(typename),
 		payload:    payload,
-		delay:      0,
-		retry:      3,
-		retryDelay: 0,
+		delay:      taskDelay,
+		retry:      taskRetry,
+		retryDelay: taskRetryDelay,
 		deadline:   time.Time{},
 		processAt:  time.Time{},
 	}
@@ -55,6 +56,8 @@ func NewTask(typename string, payload []byte, opts ...TaskOption) *Task {
 
 	return task
 }
+
+type TaskOption func(*Task)
 
 func WithId(id string) TaskOption {
 	return func(task *Task) {
@@ -68,9 +71,9 @@ func WithDelay(delay time.Duration) TaskOption {
 	}
 }
 
-func WithRetry(retry uint) TaskOption {
+func WithRetry(retry int) TaskOption {
 	return func(task *Task) {
-		task.retry = int(retry)
+		task.retry = retry
 	}
 }
 
@@ -170,7 +173,7 @@ func (t *taskMessage) Key() string {
 func (t *taskMessage) Encode() ([]byte, error) {
 	data, err := json.Marshal(t)
 	if err != nil {
-		return nil, fmt.Errorf("%w [task-key=%s]: %s", ErrTaskFailEncode, t.Key(), err)
+		return nil, fmt.Errorf("%w [task-key=%s]: %w", ErrTaskFailEncode, t.Key(), err)
 	}
 	return data, nil
 }

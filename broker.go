@@ -7,8 +7,6 @@ import (
 	"time"
 
 	"github.com/redis/go-redis/v9"
-
-	"github.com/alnovi/qsync/utils"
 )
 
 type broker struct {
@@ -16,20 +14,8 @@ type broker struct {
 	client redis.UniversalClient
 }
 
-func newBroker(prefix string, client redis.UniversalClient) *broker {
-	prefix = strings.TrimSpace(prefix)
-	prefix = strings.ToLower(prefix)
-	prefix = prefix + ":qsync"
-	prefix = strings.Trim(prefix, ":")
-
-	if utils.IsCluster(client) {
-		prefix += "{cluster}"
-	}
-
-	return &broker{
-		prefix: prefix,
-		client: client,
-	}
+func newBroker(client redis.UniversalClient) *broker {
+	return &broker{client: client}
 }
 
 func (b *broker) Ping(ctx context.Context) error {
@@ -232,7 +218,7 @@ func (b *broker) keyTasks(queue string) string {
 	return b.keyJoin(queue, "tasks")
 }
 
-func (b *broker) keyTask(queue string, key string) string {
+func (b *broker) keyTask(queue, key string) string {
 	return b.keyJoin(queue, "tasks", key)
 }
 

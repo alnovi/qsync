@@ -11,41 +11,46 @@ import (
 )
 
 type worker struct {
-	base  *base
-	queue string
-	msgCh chan *taskMessage
+	broker  *broker
+	workers int
+	queue   string
+	logger  Logger
+	msgCh   chan *taskMessage
+	closeCh <-chan struct{}
+	process func(queue string, msg *taskMessage)
 }
 
-func newWorker(base *base, queue string) *worker {
+func newWorker(broker *broker, queue string, workers int, logger Logger, process func(queue string, msg *taskMessage)) *worker {
 	return &worker{
-		base:  base,
-		queue: queue,
+		broker:  broker,
+		queue:   queue,
+		workers: workers,
+		logger:  logger,
+		process: process,
 	}
 }
 
-func (w *worker) Start(wg *sync.WaitGroup) {
-	workers := w.base.Matrix[w.queue]
-
-	w.msgCh = make(chan *taskMessage, workers)
-
+func (w *worker) Start(_ context.Context, wg *sync.WaitGroup, closeCh <-chan struct{}) {
+	w.msgCh = make(chan *taskMessage, w.workers)
+	w.closeCh = closeCh
 	w.startScheduled(wg)
 	w.startPending(wg)
-	w.startWorkers(wg, workers)
+	w.startWorkers(wg, w.workers)
 }
 
 func (w *worker) startScheduled(wg *sync.WaitGroup) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		defer w.base.Logger.Debug(fmt.Sprintf("qsync: stopped scheduled [queue=%s]", w.queue))
-		w.base.Logger.Debug(fmt.Sprintf("qsync: started scheduled [queue=%s]", w.queue))
+		defer w.logger.Debug(fmt.Sprintf("qsync-server: stopped scheduled [queue=%s]", w.queue))
+		w.logger.Debug(fmt.Sprintf("qsync-server: started scheduled [queue=%s]", w.queue))
 		for {
 			select {
-			case <-w.base.CloseCh:
+			case <-w.closeCh:
 				return
 			default:
-				if err := w.base.Broker.Scheduled(context.Background(), w.queue); err != nil {
-					w.base.Logger.Error(fmt.Sprintf("qsync: fail scheduled [queue=%s]: %s", w.queue, err))
+				if err := w.broker.Scheduled(context.Background(), w.queue); err != nil {
+					w.logger.Error(fmt.Sprintf("qsync-server: fail scheduled [queue=%s]: %s", w.queue, err))
 				}
 				time.Sleep(time.Second)
 			}
@@ -58,20 +63,20 @@ func (w *worker) startPending(wg *sync.WaitGroup) {
 	go func() {
 		defer wg.Done()
 		defer close(w.msgCh)
-		defer w.base.Logger.Debug(fmt.Sprintf("qsync: stopped pending [queue=%s]", w.queue))
-		w.base.Logger.Debug(fmt.Sprintf("qsync: started pending [queue=%s]", w.queue))
+		defer w.logger.Debug(fmt.Sprintf("qsync-server: stopped pending [queue=%s]", w.queue))
+		w.logger.Debug(fmt.Sprintf("qsync-server: started pending [queue=%s]", w.queue))
 		for {
 			select {
-			case <-w.base.CloseCh:
+			case <-w.closeCh:
 				return
 			default:
-				msg, err := w.base.Broker.Dequeue(context.Background(), w.queue)
+				msg, err := w.broker.Dequeue(context.Background(), w.queue)
 				if errors.Is(err, redis.Nil) {
 					time.Sleep(time.Second)
 					continue
 				}
 				if err != nil {
-					w.base.Logger.Error(fmt.Sprintf("qsync: fail dequeue [queue=%s]: %s", w.queue, err))
+					w.logger.Error(fmt.Sprintf("qsync-server: fail dequeue [queue=%s]: %s", w.queue, err))
 				}
 				w.msgCh <- msg
 			}
@@ -84,10 +89,10 @@ func (w *worker) startWorkers(wg *sync.WaitGroup, n int) {
 	for range n {
 		go func() {
 			defer wg.Done()
-			defer w.base.Logger.Debug(fmt.Sprintf("qsync: stopped worker [queue=%s]", w.queue))
-			w.base.Logger.Debug(fmt.Sprintf("qsync: started worker [queue=%s]", w.queue))
+			defer w.logger.Debug(fmt.Sprintf("qsync-server: stopped worker [queue=%s]", w.queue))
+			w.logger.Debug(fmt.Sprintf("qsync-server: started worker [queue=%s]", w.queue))
 			for msg := range w.msgCh {
-				w.base.ProcessTask(w.queue, msg)
+				w.process(w.queue, msg)
 			}
 		}()
 	}

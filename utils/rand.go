@@ -12,7 +12,7 @@ func RandBase62(length int) string {
 
 	charsetLen := big.NewInt(int64(len(base62Chars)))
 	for i := 0; i < length; i++ {
-		randomIndex, _ := rand.Int(rand.Reader, charsetLen)
+		randomIndex, _ := rand.Int(rand.Reader, charsetLen) // nolint:gosec
 		b[i] = base62Chars[randomIndex.Int64()]
 	}
 

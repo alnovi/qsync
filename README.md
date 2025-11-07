@@ -49,27 +49,9 @@ import (
     "github.com/redis/go-redis/v9"
 )
 
-var handleFn = func(ctx context.Context, task *qsync.TaskInfo) error {
-    fmt.Println(task.Id, string(task.Payload))
-    return nil
-}
-
 func main() {
-    client := redis.NewClient(&redis.Options{Addr: "localhost:6379"})
-
-    options := []qsync.Option{
-        qsync.WithPrefix("alnovi"),
-    }
-
-    queue, err := qsync.New(client, options...)
-    must(err)
-
-    mux := qsync.NewMux()
-    must(mux.HandleFunc("reindex-file", handleFn))
-
-    must(queue.Start(mux))
-
-    defer queue.Stop()
+    queue, err := qsync.New(redis.NewClient(&redis.Options{Addr: "localhost:6379"}))
+    must(err, "failed to initialize queue")
 
     task := qsync.NewTask("reindex-file", []byte("task payload"),
         qsync.WithRetry(3),
@@ -77,15 +59,32 @@ func main() {
         qsync.WithRetryDelay(5 * time.Second),
     )
 
-    err = queue.Enqueue(context.Background(), qsync.Default, task)
-    must(err)
+	client := queue.NewClient()
+    err = client.Enqueue(context.Background(), qsync.Default, task)
+    must(err, "failed enqueue task")
 
+	mux := qsync.NewMux()
+	err = mux.HandleFunc("reindex-file", handle)
+	must(err, "failed attach handle")
+	
+	server, err := queue.NewServer(mux)
+	must(err, "failed to initialize server")
+
+	err = server.Start(context.Background())
+	must(err, "failed to start server")
+	defer server.Stop(context.Background())
+	
     time.Sleep(time.Minute)
 }
 
-func must(err error) {
+func handle(ctx context.Context, task *qsync.TaskInfo) error {
+	fmt.Println(task.Id, string(task.Payload))
+	return nil
+}
+
+func must(err error, msg string) {
     if err != nil {
-        panic(err)
+        panic(fmt.Errorf("%s: %w", msg, err))
     }
 }
 ```

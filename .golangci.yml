@@ -1,0 +1,95 @@
+version: "2"
+
+run:
+  timeout: 5m
+  relative-path-mode: gomod
+  issues-exit-code: 1
+  tests: true
+  modules-download-mode: readonly
+
+output:
+  formats:
+    text:
+      print-linter-name: true
+      print-issued-lines: true
+      colors: true
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  uniq-by-line: true
+
+linters:
+  default: standard
+  enable:
+    - errcheck
+    - errorlint
+    - errname
+    - nilerr
+    - nilnil
+    - staticcheck
+    - govet
+    - gocritic
+    - revive
+    - unused
+    - gosec
+    - depguard
+    - bodyclose
+    - asciicheck
+    - cyclop
+    - copyloopvar
+    - dupl
+    - ineffassign
+    - unparam
+    - forbidigo
+    - containedctx
+    - goconst
+    - mnd
+    - sqlclosecheck
+    - unconvert
+    - whitespace
+  disable:
+    - lll
+  exclusions:
+    generated: strict
+    rules:
+      - path: _test\.go
+        linters:
+          - cyclop
+          - dupl
+          - gosec
+  settings:
+    gosec:
+      config:
+        global:
+          audit: true
+          show-ignored: true
+        severity: "medium"
+        confidence: "medium"
+    cyclop:
+      max-complexity: 20
+    depguard:
+      rules:
+        main:
+          deny:
+            - pkg: io/ioutil
+              desc: "Использование устаревшего пакета io/ioutil запрещено (замените вызовы на аналоги из пакетов os/io)"
+    revive:
+      severity: warning
+    forbidigo:
+      exclude-godoc-examples: true
+      analyze-types: true
+
+formatters:
+  enable:
+    - gofumpt
+    - gci
+  settings:
+    gofumpt:
+      extra-rules: true
+    gci:
+      sections:
+        - Standard
+        - Default
+        - Prefix(github.com/alnovi/qsync)
+      no-inline-comments: false
