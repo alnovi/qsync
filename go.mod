@@ -4,7 +4,7 @@ go 1.25
 
 tool github.com/golangci/golangci-lint/v2/cmd/golangci-lint
 
-require github.com/redis/go-redis/v9 v9.7.3
+require github.com/redis/go-redis/v9 v9.12.1
 
 require (
 	4d63.com/gocheckcompilerdirectives v1.3.0 // indirect
