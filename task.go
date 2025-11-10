@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/alnovi/qsync/utils"
+	"github.com/alnovi/qsync/v2/utils"
 )
 
 const (

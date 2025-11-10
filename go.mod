@@ -1,4 +1,4 @@
-module github.com/alnovi/qsync
+module github.com/alnovi/qsync/v2
 
 go 1.25
 

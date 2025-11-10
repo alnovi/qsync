@@ -7,7 +7,7 @@ import (
 
 	"github.com/redis/go-redis/v9"
 
-	"github.com/alnovi/qsync/utils"
+	"github.com/alnovi/qsync/v2/utils"
 )
 
 const (
