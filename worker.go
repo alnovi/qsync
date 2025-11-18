@@ -77,6 +77,8 @@ func (w *worker) startPending(wg *sync.WaitGroup) {
 				}
 				if err != nil {
 					w.logger.Error(fmt.Sprintf("qsync-server: fail dequeue [queue=%s]: %s", w.queue, err))
+					time.Sleep(time.Second)
+					continue
 				}
 				w.msgCh <- msg
 			}
