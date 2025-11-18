@@ -48,11 +48,16 @@ func (w *worker) startScheduled(wg *sync.WaitGroup) {
 			select {
 			case <-w.closeCh:
 				return
-			default:
+			case <-time.After(time.Second):
 				if err := w.broker.Scheduled(context.Background(), w.queue); err != nil {
 					w.logger.Error(fmt.Sprintf("qsync-server: fail scheduled [queue=%s]: %s", w.queue, err))
+					select {
+					case <-w.closeCh:
+						return
+					case <-time.After(time.Minute):
+						continue
+					}
 				}
-				time.Sleep(time.Second)
 			}
 		}
 	}()
@@ -72,13 +77,21 @@ func (w *worker) startPending(wg *sync.WaitGroup) {
 			default:
 				msg, err := w.broker.Dequeue(context.Background(), w.queue)
 				if errors.Is(err, redis.Nil) {
-					time.Sleep(time.Second)
-					continue
+					select {
+					case <-w.closeCh:
+						return
+					case <-time.After(time.Second):
+						continue
+					}
 				}
 				if err != nil {
 					w.logger.Error(fmt.Sprintf("qsync-server: fail dequeue [queue=%s]: %s", w.queue, err))
-					time.Sleep(time.Second)
-					continue
+					select {
+					case <-w.closeCh:
+						return
+					case <-time.After(time.Minute):
+						continue
+					}
 				}
 				w.msgCh <- msg
 			}
