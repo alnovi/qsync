@@ -45,7 +45,7 @@ import (
     "fmt"
     "time"
 
-    "github.com/alnovi/qsync"
+    "github.com/alnovi/qsync/v2"
     "github.com/redis/go-redis/v9"
 )
 
