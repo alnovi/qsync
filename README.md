@@ -20,7 +20,7 @@
 ## Установка
 
 ```sh
-go get -u github.com/alnovi/qsync
+go get -u github.com/alnovi/qsync/v2
 ```
 
 ## Функции
