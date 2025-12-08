@@ -76,13 +76,13 @@ func (m *Metrics) QueueEnqueueErrInc(queue, task string) {
 
 func (m *Metrics) QueueDequeueOkInc(queue string) {
 	if m.enabled {
-		m.queueEnqueueCount.With(prometheus.Labels{"status": statusOK, "queue": queue}).Inc()
+		m.queueDequeueCount.With(prometheus.Labels{"status": statusOK, "queue": queue}).Inc()
 	}
 }
 
 func (m *Metrics) QueueDequeueErrInc(queue string) {
 	if m.enabled {
-		m.queueEnqueueCount.With(prometheus.Labels{"status": statusErr, "queue": queue}).Inc()
+		m.queueDequeueCount.With(prometheus.Labels{"status": statusErr, "queue": queue}).Inc()
 	}
 }
 
