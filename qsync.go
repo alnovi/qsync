@@ -26,14 +26,16 @@ type Server interface {
 }
 
 type Qsync struct {
-	broker *broker
-	logger Logger
+	broker  *broker
+	metrics *Metrics
+	logger  Logger
 }
 
 func New(client redis.UniversalClient, opts ...Option) (*Qsync, error) {
 	qsync := &Qsync{
-		broker: newBroker(client),
-		logger: slog.New(slog.DiscardHandler),
+		broker:  newBroker(client),
+		metrics: NewMetrics(false),
+		logger:  slog.New(slog.DiscardHandler),
 	}
 
 	for _, opt := range opts {
@@ -50,11 +52,11 @@ func (q *Qsync) Ping(ctx context.Context) error {
 }
 
 func (q *Qsync) NewClient() Client {
-	return newClient(q.broker)
+	return newClient(q.broker, q.metrics)
 }
 
 func (q *Qsync) NewServer(mux *Mux, opts ...ServerOption) (Server, error) {
-	return newServer(q.broker, mux, q.logger, opts...)
+	return newServer(q.broker, mux, q.logger, q.metrics, opts...)
 }
 
 type Option func(q *Qsync) error
@@ -81,6 +83,13 @@ func WithLogger(logger Logger) Option {
 		if logger != nil {
 			q.logger = logger
 		}
+		return nil
+	}
+}
+
+func WithMetrics(opts ...MetricsOption) Option {
+	return func(q *Qsync) error {
+		q.metrics = NewMetrics(true, opts...)
 		return nil
 	}
 }

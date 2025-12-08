@@ -27,13 +27,14 @@ type server struct {
 	errHandle func(error, *TaskInfo)
 	ctxFn     func() context.Context
 	logger    Logger
+	metrics   *Metrics
 	mu        sync.Mutex
 	wg        sync.WaitGroup
 	isRun     bool
 	closeCh   chan struct{}
 }
 
-func newServer(broker *broker, mux *Mux, log Logger, opts ...ServerOption) (*server, error) {
+func newServer(broker *broker, mux *Mux, log Logger, metrics *Metrics, opts ...ServerOption) (*server, error) {
 	s := &server{
 		broker:    broker,
 		mux:       mux,
@@ -41,6 +42,7 @@ func newServer(broker *broker, mux *Mux, log Logger, opts ...ServerOption) (*ser
 		errHandle: func(err error, taskInfo *TaskInfo) {},
 		ctxFn:     context.Background,
 		logger:    log,
+		metrics:   metrics,
 		isRun:     false,
 	}
 
@@ -69,7 +71,7 @@ func (s *server) Start(ctx context.Context) error {
 	s.closeCh = make(chan struct{})
 
 	for queue, workers := range s.matrix {
-		newWorker(s.broker, queue, workers, s.logger, s.processTask).Start(ctx, &s.wg, s.closeCh)
+		newWorker(s.broker, queue, workers, s.logger, s.metrics, s.processTask).Start(ctx, &s.wg, s.closeCh)
 	}
 
 	return nil
@@ -98,7 +100,7 @@ func (s *server) processTask(queue string, msg *taskMessage) {
 	}()
 
 	if err := msg.IsDeadline(); err != nil {
-		s.markTaskDeadline(msg, err)
+		s.markTaskDeadline(queue, msg, err)
 		return
 	}
 
@@ -114,7 +116,7 @@ func (s *server) processTask(queue string, msg *taskMessage) {
 		return
 	}
 
-	s.markTaskSuccess(msg)
+	s.markTaskSuccess(queue, msg)
 }
 
 func (s *server) runErrHandler(err error, task *TaskInfo) {
@@ -122,6 +124,7 @@ func (s *server) runErrHandler(err error, task *TaskInfo) {
 }
 
 func (s *server) markTaskError(queue string, msg *taskMessage, err error) {
+	s.metrics.TaskProcessErrInc(queue, msg)
 	s.runErrHandler(err, newTaskInfo(msg))
 
 	if msg.Retry > msg.Retried {
@@ -133,11 +136,14 @@ func (s *server) markTaskError(queue string, msg *taskMessage, err error) {
 	}
 }
 
-func (s *server) markTaskDeadline(msg *taskMessage, err error) {
+func (s *server) markTaskDeadline(queue string, msg *taskMessage, err error) {
+	s.metrics.TaskProcessExpiredInc(queue, msg)
 	s.runErrHandler(err, newTaskInfo(msg))
 }
 
-func (s *server) markTaskSuccess(_ *taskMessage) {}
+func (s *server) markTaskSuccess(queue string, msg *taskMessage) {
+	s.metrics.TaskProcessOkInc(queue, msg)
+}
 
 type ServerOption func(s *server) error
 

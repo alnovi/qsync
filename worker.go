@@ -15,17 +15,19 @@ type worker struct {
 	workers int
 	queue   string
 	logger  Logger
+	metrics *Metrics
 	msgCh   chan *taskMessage
 	closeCh <-chan struct{}
 	process func(queue string, msg *taskMessage)
 }
 
-func newWorker(broker *broker, queue string, workers int, logger Logger, process func(queue string, msg *taskMessage)) *worker {
+func newWorker(broker *broker, queue string, workers int, logger Logger, metrics *Metrics, process func(queue string, msg *taskMessage)) *worker {
 	return &worker{
 		broker:  broker,
 		queue:   queue,
 		workers: workers,
 		logger:  logger,
+		metrics: metrics,
 		process: process,
 	}
 }
@@ -86,6 +88,7 @@ func (w *worker) startPending(wg *sync.WaitGroup) {
 				}
 				if err != nil {
 					w.logger.Error(fmt.Sprintf("qsync-server: fail dequeue [queue=%s]: %s", w.queue, err))
+					w.metrics.QueueDequeueErrInc(w.queue)
 					select {
 					case <-w.closeCh:
 						return
@@ -93,6 +96,7 @@ func (w *worker) startPending(wg *sync.WaitGroup) {
 						continue
 					}
 				}
+				w.metrics.QueueDequeueOkInc(w.queue)
 				w.msgCh <- msg
 			}
 		}
