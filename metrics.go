@@ -24,7 +24,7 @@ func NewMetrics(enabled bool, opts ...MetricsOption) *Metrics {
 	m := &Metrics{
 		enabled:   enabled,
 		namespace: "",
-		register:  prometheus.NewRegistry(),
+		register:  prometheus.DefaultRegisterer,
 	}
 
 	for _, opt := range opts {
@@ -117,5 +117,13 @@ func WithEnabled(enabled bool) MetricsOption {
 func WithNamespace(namespace string) MetricsOption {
 	return func(m *Metrics) {
 		m.namespace = namespace
+	}
+}
+
+func WithRegister(register prometheus.Registerer) MetricsOption {
+	return func(m *Metrics) {
+		if register != nil {
+			m.register = register
+		}
 	}
 }
