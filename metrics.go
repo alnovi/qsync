@@ -24,7 +24,6 @@ func NewMetrics(enabled bool, opts ...MetricsOption) *Metrics {
 	m := &Metrics{
 		enabled:   enabled,
 		namespace: "",
-		register:  prometheus.DefaultRegisterer,
 	}
 
 	for _, opt := range opts {
@@ -33,6 +32,10 @@ func NewMetrics(enabled bool, opts ...MetricsOption) *Metrics {
 
 	if !m.enabled {
 		return m
+	}
+
+	if m.register == nil {
+		m.register = prometheus.DefaultRegisterer
 	}
 
 	m.queueEnqueueCount = prometheus.NewCounterVec(prometheus.CounterOpts{
