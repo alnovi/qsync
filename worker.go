@@ -12,8 +12,9 @@ import (
 
 type worker struct {
 	broker  *broker
-	workers int
 	queue   string
+	workers int
+	wait    time.Duration // Schedule wait timeout
 	logger  Logger
 	metrics *Metrics
 	msgCh   chan *taskMessage
@@ -21,11 +22,12 @@ type worker struct {
 	process func(queue string, msg *taskMessage)
 }
 
-func newWorker(broker *broker, queue string, workers int, logger Logger, metrics *Metrics, process func(queue string, msg *taskMessage)) *worker {
+func newWorker(broker *broker, queue string, workers int, wait time.Duration, logger Logger, metrics *Metrics, process func(queue string, msg *taskMessage)) *worker {
 	return &worker{
 		broker:  broker,
 		queue:   queue,
 		workers: workers,
+		wait:    wait,
 		logger:  logger,
 		metrics: metrics,
 		process: process,
@@ -50,7 +52,7 @@ func (w *worker) startScheduled(wg *sync.WaitGroup) {
 			select {
 			case <-w.closeCh:
 				return
-			case <-time.After(time.Second):
+			case <-time.After(w.wait):
 				if err := w.broker.Scheduled(context.Background(), w.queue); err != nil {
 					w.logger.Error(fmt.Sprintf("qsync-server: fail scheduled [queue=%s]: %s", w.queue, err))
 					select {

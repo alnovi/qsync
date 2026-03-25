@@ -24,6 +24,7 @@ type server struct {
 	broker    *broker
 	mux       *Mux
 	matrix    map[string]int
+	wait      time.Duration
 	errHandle func(error, *TaskInfo)
 	ctxFn     func() context.Context
 	logger    Logger
@@ -39,6 +40,7 @@ func newServer(broker *broker, mux *Mux, log Logger, metrics *Metrics, opts ...S
 		broker:    broker,
 		mux:       mux,
 		matrix:    defaultMatrix,
+		wait:      time.Second,
 		errHandle: func(err error, taskInfo *TaskInfo) {},
 		ctxFn:     context.Background,
 		logger:    log,
@@ -71,7 +73,7 @@ func (s *server) Start(ctx context.Context) error {
 	s.closeCh = make(chan struct{})
 
 	for queue, workers := range s.matrix {
-		newWorker(s.broker, queue, workers, s.logger, s.metrics, s.processTask).Start(ctx, &s.wg, s.closeCh)
+		newWorker(s.broker, queue, workers, s.wait, s.logger, s.metrics, s.processTask).Start(ctx, &s.wg, s.closeCh)
 	}
 
 	return nil
@@ -188,6 +190,15 @@ func WithServerLogger(logger *slog.Logger) ServerOption {
 	return func(s *server) error {
 		if logger != nil {
 			s.logger = logger
+		}
+		return nil
+	}
+}
+
+func WithWait(wait time.Duration) ServerOption {
+	return func(s *server) error {
+		if wait > 0 {
+			s.wait = wait
 		}
 		return nil
 	}
