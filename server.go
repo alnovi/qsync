@@ -27,7 +27,7 @@ type server struct {
 	wait      time.Duration
 	errHandle func(error, *TaskInfo)
 	ctxFn     func() context.Context
-	logger    Logger
+	logger    *slog.Logger
 	metrics   *Metrics
 	mu        sync.Mutex
 	wg        sync.WaitGroup
@@ -35,7 +35,7 @@ type server struct {
 	closeCh   chan struct{}
 }
 
-func newServer(broker *broker, mux *Mux, log Logger, metrics *Metrics, opts ...ServerOption) (*server, error) {
+func newServer(broker *broker, mux *Mux, log *slog.Logger, metrics *Metrics, opts ...ServerOption) (*server, error) {
 	s := &server{
 		broker:    broker,
 		mux:       mux,

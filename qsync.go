@@ -28,7 +28,7 @@ type Server interface {
 type Qsync struct {
 	broker  *broker
 	metrics *Metrics
-	logger  Logger
+	logger  *slog.Logger
 }
 
 func New(client redis.UniversalClient, opts ...Option) (*Qsync, error) {
@@ -78,7 +78,7 @@ func WithPrefix(prefix string) Option {
 	}
 }
 
-func WithLogger(logger Logger) Option {
+func WithLogger(logger *slog.Logger) Option {
 	return func(q *Qsync) error {
 		if logger != nil {
 			q.logger = logger

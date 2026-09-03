@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"sync"
 	"time"
 
@@ -15,14 +16,14 @@ type worker struct {
 	queue   string
 	workers int
 	wait    time.Duration // Schedule wait timeout
-	logger  Logger
+	logger  *slog.Logger
 	metrics *Metrics
 	msgCh   chan *taskMessage
 	closeCh <-chan struct{}
 	process func(queue string, msg *taskMessage)
 }
 
-func newWorker(broker *broker, queue string, workers int, wait time.Duration, logger Logger, metrics *Metrics, process func(queue string, msg *taskMessage)) *worker {
+func newWorker(broker *broker, queue string, workers int, wait time.Duration, logger *slog.Logger, metrics *Metrics, process func(queue string, msg *taskMessage)) *worker {
 	return &worker{
 		broker:  broker,
 		queue:   queue,

@@ -140,7 +140,7 @@ func newTaskMessage(task *Task) (*taskMessage, error) {
 	}
 
 	if msg.Id == "" {
-		msg.Id = utils.RandBase62(taskIdCost)
+		msg.Id = utils.MustRandBase62(taskIdCost)
 	}
 
 	if msg.Type == "" {

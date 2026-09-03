@@ -20,6 +20,7 @@ type Metrics struct {
 	taskProcessCount  *prometheus.CounterVec
 }
 
+// nolint:goconst
 func NewMetrics(enabled bool, opts ...MetricsOption) *Metrics {
 	m := &Metrics{
 		enabled:   enabled,

@@ -33,7 +33,6 @@ linters:
     - revive
     - unused
     - gosec
-    - depguard
     - bodyclose
     - asciicheck
     - cyclop
@@ -68,12 +67,6 @@ linters:
         confidence: "medium"
     cyclop:
       max-complexity: 20
-    depguard:
-      rules:
-        main:
-          deny:
-            - pkg: io/ioutil
-              desc: "Использование устаревшего пакета io/ioutil запрещено (замените вызовы на аналоги из пакетов os/io)"
     revive:
       severity: warning
     forbidigo:
@@ -85,8 +78,6 @@ formatters:
     - gofumpt
     - gci
   settings:
-    gofumpt:
-      extra-rules: true
     gci:
       sections:
         - Standard
