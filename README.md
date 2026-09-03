@@ -2,10 +2,11 @@
 
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/alnovi/qsync)
 ![GitHub License](https://img.shields.io/github/license/alnovi/qsync)
-[![Go Report Card](https://goreportcard.com/badge/github.com/alnovi/qsync)](https://goreportcard.com/report/github.com/alnovi/qsync)
 ![GitHub top language](https://img.shields.io/github/languages/top/alnovi/qsync)
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/alnovi/qsync)
 ![GitHub Release](https://img.shields.io/github/v/release/alnovi/qsync)
+![coverage](https://raw.githubusercontent.com/alnovi/qsync/badges/.badges/master/coverage.svg)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/alnovi/qsync/master.yml)
 
 **Qsync** — это библиотека Go для постановки задач в очередь и их асинхронной обработки с помощью обработчиков.
 
