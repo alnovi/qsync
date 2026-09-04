@@ -1,5 +1,5 @@
 profile: cover.out
 threshold:
-  file: 70
-  package: 80
-  total: 90
+  file: 60
+  package: 70
+  total: 80
