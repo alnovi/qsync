@@ -15,7 +15,7 @@ func newClient(broker *broker, metrics *Metrics) *client {
 }
 
 func (c *client) Enqueue(ctx context.Context, queue string, task *Task) error {
-	msg, err := newTaskMessage(task)
+	msg, err := NewTaskMessage(task)
 	if err != nil {
 		c.metrics.QueueEnqueueErrInc(queue, task.typename)
 		return err

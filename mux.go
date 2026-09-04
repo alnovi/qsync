@@ -3,10 +3,12 @@ package qsync
 import (
 	"context"
 	"errors"
+	"strings"
 	"sync"
 )
 
 var (
+	ErrPatternIsEmpty  = errors.New("pattern is empty")
 	ErrHandlerOverlap  = errors.New("handler overlap")
 	ErrHandlerNotFound = errors.New("handler not found")
 )
@@ -33,6 +35,9 @@ func (m *Mux) Handler(pattern string, handler Handler) error {
 func (m *Mux) HandleFunc(pattern string, handler HandleFunc) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	if pattern = strings.TrimSpace(pattern); pattern == "" {
+		return ErrPatternIsEmpty
+	}
 	if _, ok := m.handlers[pattern]; ok {
 		return ErrHandlerOverlap
 	}

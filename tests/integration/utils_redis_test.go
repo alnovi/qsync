@@ -6,7 +6,7 @@ import (
 	"github.com/alnovi/qsync/v2/utils"
 )
 
-func (s *TestSuite) TestQsyncUtilsRedis() {
+func (s *TestSuite) TestUtilsRedis() {
 	testCases := []struct {
 		name   string
 		client redis.UniversalClient

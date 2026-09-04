@@ -94,7 +94,7 @@ func (s *server) Stop(_ context.Context) error {
 	return nil
 }
 
-func (s *server) processTask(queue string, msg *taskMessage) {
+func (s *server) processTask(queue string, msg *TaskMessage) {
 	defer func() {
 		if err := recover(); err != nil {
 			s.markTaskError(queue, msg, err.(error))
@@ -125,7 +125,7 @@ func (s *server) runErrHandler(err error, task *TaskInfo) {
 	go s.errHandle(err, task)
 }
 
-func (s *server) markTaskError(queue string, msg *taskMessage, err error) {
+func (s *server) markTaskError(queue string, msg *TaskMessage, err error) {
 	s.metrics.TaskProcessErrInc(queue, msg)
 	s.runErrHandler(err, newTaskInfo(msg))
 
@@ -138,12 +138,12 @@ func (s *server) markTaskError(queue string, msg *taskMessage, err error) {
 	}
 }
 
-func (s *server) markTaskDeadline(queue string, msg *taskMessage, err error) {
+func (s *server) markTaskDeadline(queue string, msg *TaskMessage, err error) {
 	s.metrics.TaskProcessExpiredInc(queue, msg)
 	s.runErrHandler(err, newTaskInfo(msg))
 }
 
-func (s *server) markTaskSuccess(queue string, msg *taskMessage) {
+func (s *server) markTaskSuccess(queue string, msg *TaskMessage) {
 	s.metrics.TaskProcessOkInc(queue, msg)
 }
 

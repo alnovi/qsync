@@ -90,13 +90,13 @@ func (m *Metrics) QueueDequeueErrInc(queue string) {
 	}
 }
 
-func (m *Metrics) TaskProcessOkInc(queue string, task *taskMessage) {
+func (m *Metrics) TaskProcessOkInc(queue string, task *TaskMessage) {
 	if m.enabled {
 		m.taskProcessCount.With(prometheus.Labels{"status": statusOK, "queue": queue, "task": task.Type}).Inc()
 	}
 }
 
-func (m *Metrics) TaskProcessErrInc(queue string, task *taskMessage) {
+func (m *Metrics) TaskProcessErrInc(queue string, task *TaskMessage) {
 	if m.enabled {
 		if m.enabled {
 			m.taskProcessCount.With(prometheus.Labels{"status": statusErr, "queue": queue, "task": task.Type}).Inc()
@@ -104,7 +104,7 @@ func (m *Metrics) TaskProcessErrInc(queue string, task *taskMessage) {
 	}
 }
 
-func (m *Metrics) TaskProcessExpiredInc(queue string, task *taskMessage) {
+func (m *Metrics) TaskProcessExpiredInc(queue string, task *TaskMessage) {
 	if m.enabled {
 		m.taskProcessCount.With(prometheus.Labels{"status": statusExpired, "queue": queue, "task": task.Type}).Inc()
 	}
@@ -126,8 +126,6 @@ func WithNamespace(namespace string) MetricsOption {
 
 func WithRegister(register prometheus.Registerer) MetricsOption {
 	return func(m *Metrics) {
-		if register != nil {
-			m.register = register
-		}
+		m.register = register
 	}
 }

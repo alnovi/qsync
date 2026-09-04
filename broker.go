@@ -3,6 +3,7 @@ package qsync
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"strings"
 	"time"
 
@@ -19,10 +20,13 @@ func newBroker(client redis.UniversalClient) *broker {
 }
 
 func (b *broker) Ping(ctx context.Context) error {
+	if b.client == nil {
+		return errors.New("redis client is nil")
+	}
 	return b.client.Ping(ctx).Err()
 }
 
-func (b *broker) Enqueue(ctx context.Context, queue string, msg *taskMessage) error {
+func (b *broker) Enqueue(ctx context.Context, queue string, msg *TaskMessage) error {
 	if time.Now().Before(msg.ProcessAt) {
 		return b.enqueueScheduled(ctx, queue, msg)
 	}
@@ -49,7 +53,7 @@ end
 return redis.Nil
 `)
 
-func (b *broker) Dequeue(ctx context.Context, queue string) (*taskMessage, error) {
+func (b *broker) Dequeue(ctx context.Context, queue string) (*TaskMessage, error) {
 	keys := []string{
 		b.keyPending(queue),
 		b.keyTasks(queue),
@@ -60,7 +64,7 @@ func (b *broker) Dequeue(ctx context.Context, queue string) (*taskMessage, error
 		return nil, err
 	}
 
-	task := new(taskMessage)
+	task := new(TaskMessage)
 
 	err = json.Unmarshal([]byte(res.(string)), task)
 	if err != nil {
@@ -119,7 +123,7 @@ redis.call("LPUSH", pendingKey, pendingVal)
 return 1
 `)
 
-func (b *broker) enqueuePending(ctx context.Context, queue string, msg *taskMessage) error {
+func (b *broker) enqueuePending(ctx context.Context, queue string, msg *TaskMessage) error {
 	encoded, err := msg.Encode()
 	if err != nil {
 		return err
@@ -171,7 +175,7 @@ redis.call("ZADD", scheduledKey, scheduledScore, scheduledVal)
 return 1
 `)
 
-func (b *broker) enqueueScheduled(ctx context.Context, queue string, msg *taskMessage) error {
+func (b *broker) enqueueScheduled(ctx context.Context, queue string, msg *TaskMessage) error {
 	encoded, err := msg.Encode()
 	if err != nil {
 		return err

@@ -18,12 +18,12 @@ type worker struct {
 	wait    time.Duration // Schedule wait timeout
 	logger  *slog.Logger
 	metrics *Metrics
-	msgCh   chan *taskMessage
+	msgCh   chan *TaskMessage
 	closeCh <-chan struct{}
-	process func(queue string, msg *taskMessage)
+	process func(queue string, msg *TaskMessage)
 }
 
-func newWorker(broker *broker, queue string, workers int, wait time.Duration, logger *slog.Logger, metrics *Metrics, process func(queue string, msg *taskMessage)) *worker {
+func newWorker(broker *broker, queue string, workers int, wait time.Duration, logger *slog.Logger, metrics *Metrics, process func(queue string, msg *TaskMessage)) *worker {
 	return &worker{
 		broker:  broker,
 		queue:   queue,
@@ -35,15 +35,15 @@ func newWorker(broker *broker, queue string, workers int, wait time.Duration, lo
 	}
 }
 
-func (w *worker) Start(_ context.Context, wg *sync.WaitGroup, closeCh <-chan struct{}) {
-	w.msgCh = make(chan *taskMessage, w.workers)
+func (w *worker) Start(ctx context.Context, wg *sync.WaitGroup, closeCh <-chan struct{}) {
+	w.msgCh = make(chan *TaskMessage, w.workers)
 	w.closeCh = closeCh
-	w.startScheduled(wg)
-	w.startPending(wg)
+	w.startScheduled(ctx, wg)
+	w.startPending(ctx, wg)
 	w.startWorkers(wg, w.workers)
 }
 
-func (w *worker) startScheduled(wg *sync.WaitGroup) {
+func (w *worker) startScheduled(ctx context.Context, wg *sync.WaitGroup) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -54,7 +54,7 @@ func (w *worker) startScheduled(wg *sync.WaitGroup) {
 			case <-w.closeCh:
 				return
 			case <-time.After(w.wait):
-				if err := w.broker.Scheduled(context.Background(), w.queue); err != nil {
+				if err := w.broker.Scheduled(ctx, w.queue); err != nil {
 					w.logger.Error(fmt.Sprintf("qsync-server: fail scheduled [queue=%s]: %s", w.queue, err))
 					select {
 					case <-w.closeCh:
@@ -68,7 +68,7 @@ func (w *worker) startScheduled(wg *sync.WaitGroup) {
 	}()
 }
 
-func (w *worker) startPending(wg *sync.WaitGroup) {
+func (w *worker) startPending(ctx context.Context, wg *sync.WaitGroup) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -80,7 +80,7 @@ func (w *worker) startPending(wg *sync.WaitGroup) {
 			case <-w.closeCh:
 				return
 			default:
-				msg, err := w.broker.Dequeue(context.Background(), w.queue)
+				msg, err := w.broker.Dequeue(ctx, w.queue)
 				if errors.Is(err, redis.Nil) {
 					select {
 					case <-w.closeCh:

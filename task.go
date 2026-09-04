@@ -16,7 +16,7 @@ const (
 	taskDelay      = 0
 	taskRetry      = 3
 	taskRetryDelay = 0
-	taskMaxRetry   = 5
+	taskMaxRetry   = 10
 )
 
 var (
@@ -103,7 +103,7 @@ type TaskInfo struct {
 	Retried int
 }
 
-func newTaskInfo(msg *taskMessage) *TaskInfo {
+func newTaskInfo(msg *TaskMessage) *TaskInfo {
 	return &TaskInfo{
 		Id:      msg.Id,
 		Type:    msg.Type,
@@ -113,7 +113,7 @@ func newTaskInfo(msg *taskMessage) *TaskInfo {
 	}
 }
 
-type taskMessage struct {
+type TaskMessage struct {
 	Id         string        `json:"id"`
 	Type       string        `json:"type"`
 	Payload    []byte        `json:"payload"`
@@ -124,12 +124,12 @@ type taskMessage struct {
 	ProcessAt  time.Time     `json:"-"`
 }
 
-func newTaskMessage(task *Task) (*taskMessage, error) {
+func NewTaskMessage(task *Task) (*TaskMessage, error) {
 	if task == nil {
 		return nil, ErrTaskIsNil
 	}
 
-	msg := &taskMessage{
+	msg := &TaskMessage{
 		Id:         task.id,
 		Type:       task.typename,
 		Payload:    task.payload,
@@ -166,11 +166,11 @@ func newTaskMessage(task *Task) (*taskMessage, error) {
 	return msg, nil
 }
 
-func (t *taskMessage) Key() string {
+func (t *TaskMessage) Key() string {
 	return t.Type + "-" + t.Id
 }
 
-func (t *taskMessage) Encode() ([]byte, error) {
+func (t *TaskMessage) Encode() ([]byte, error) {
 	data, err := json.Marshal(t)
 	if err != nil {
 		return nil, fmt.Errorf("%w [task-key=%s]: %w", ErrTaskFailEncode, t.Key(), err)
@@ -178,7 +178,7 @@ func (t *taskMessage) Encode() ([]byte, error) {
 	return data, nil
 }
 
-func (t *taskMessage) IsDeadline() error {
+func (t *TaskMessage) IsDeadline() error {
 	if !t.Deadline.IsZero() && time.Now().After(t.Deadline) {
 		return ErrTaskIsDeadline
 	}

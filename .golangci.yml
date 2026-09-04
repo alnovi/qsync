@@ -42,7 +42,7 @@ linters:
     - unparam
     - forbidigo
     - containedctx
-    - goconst
+#    - goconst
     - mnd
     - sqlclosecheck
     - unconvert

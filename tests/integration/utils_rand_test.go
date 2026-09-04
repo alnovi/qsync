@@ -2,7 +2,7 @@ package integration
 
 import "github.com/alnovi/qsync/v2/utils"
 
-func (s *TestSuite) TestQsyncUtilsRandBase62() {
+func (s *TestSuite) TestUtilsRandBase62() {
 	testCases := []struct {
 		name      string
 		length    int

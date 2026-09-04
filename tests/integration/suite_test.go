@@ -29,19 +29,18 @@ func TestIntegration(t *testing.T) {
 }
 
 func (s *TestSuite) SetupSuite() {
-	ctx := context.Background()
-	s.initRedis(ctx)
+	s.initRedis(s.T().Context())
 }
 
 func (s *TestSuite) TearDownSuite() {
 	if s.redisContainer != nil {
-		s.NoError(s.redisContainer.Terminate(context.Background()))
+		s.NoError(s.redisContainer.Terminate(s.T().Context()))
 	}
 }
 
 func (s *TestSuite) SetupTest() {
 	if s.redisClient != nil {
-		s.redisClient.FlushAll(context.Background())
+		s.redisClient.FlushAll(s.T().Context())
 	}
 }
 
